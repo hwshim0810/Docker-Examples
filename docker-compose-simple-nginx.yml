@@ -1,0 +1,19 @@
+version: '3'
+services:
+  nginx:
+    image: nginx:stable
+    container_name: Nginx
+    ports:
+      - '80:80'
+    volumes:
+    - ./sites-enabled:/etc/nginx/sites-enabled
+    - ./log:/var/log/nginx
+    - ./conf:/etc/nginx/conf.d
+
+
+
+
+
+
+
+
