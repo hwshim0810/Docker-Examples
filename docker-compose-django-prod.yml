@@ -1,0 +1,60 @@
+version: '2.1'
+
+volumes:
+  mysql_db: {}
+  python_packages: {}
+
+services:
+  nginx:
+    image: nginx:stable
+    container_name: Nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    depends_on:
+      - django  
+    volumes:
+      - ./compose/custom/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./compose/custom/nginx/log:/var/log/nginx
+      - ./compose/custom/nginx/conf:/etc/nginx/conf.d
+      - ./static:/app/static
+  
+  db:
+    image: mysql:5.6
+    restart: always
+    volumes:
+      - mysql_db:/var/lib/mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: 
+      MYSQL_USER: 
+      MYSQL_PASSWORD: 
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/custom/Dockerfile
+    command: /app/compose/custom/start-prod.sh
+    environment:
+      - DJANGO_DEBUG=False
+      - DJANGO_SETTINGS_MODULE=
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=3306
+      - DJANGO_DB_NAME=
+      - DJANGO_DB_USERNAME=
+      - DJANGO_DB_PASSWORD=
+      - DJANGO_SECRET_KEY=
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
+    volumes:
+      - ./static:/app/static
+      - python_packages:/usr/local/lib/python3.6/site-packages/
